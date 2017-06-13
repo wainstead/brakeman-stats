@@ -1,0 +1,81 @@
+---
+title: "Statistics for the Brakeman git repository"
+author: "Steve Wainstead"
+date: "June 12, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(git2r)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(lubridate)
+
+options(stringsAsFactors = FALSE)
+
+```
+
+```{r load-repo}
+repo <- repository('brakeman-from-github')
+# 285 is about 10% of the commits, as I write.
+# I believe we get the commits from newest to oldest from git2r.
+commits_10pct = repo %>% commits(n = 285)
+commits_all = repo %>% commits()
+```
+
+Make a dataframe from our ten percent of the commits...
+
+```{r get-10pct-commits}
+# Get relevant bits out of the list
+brakeman_ten_pct_df <-
+  commits_10pct %>%
+  map_df(
+    ~ data.frame(
+      name    = .@author@name,
+      date    = .@author@when@time %>% as.POSIXct(origin="1970-01-01"),
+      message = .@message
+    )
+  )
+
+```
+
+Now create a histogram of commits by day of the week.
+
+```{r dow-10pct-histogram}
+brakeman_ten_pct_df %>%
+  mutate(weekday = weekdays(date)) %>%
+  group_by(weekday) %>%
+  tally() %>%
+  ggplot(aes(x = weekday, y = n)) +
+  geom_bar(stat = "identity")
+```
+
+Now we'll pull in all commits from the Git repository:
+
+```{r dow-commits-all}
+commits_all_df <-
+  commits_all %>%
+  map_df(
+    ~ data.frame(
+      name    = .@author@name,
+      date    = .@author@when@time %>% as.POSIXct(origin="1970-01-01"),
+      message = .@message
+    )
+  )
+
+```
+
+Now the same histogram:
+
+```{r dow-histogram-all}
+commits_all_df %>%
+  mutate(weekday = weekdays(date)) %>%
+  group_by(weekday) %>%
+  tally() %>%
+  ggplot(aes(x = weekday, y = n)) +
+  geom_bar(stat = "identity")
+```
+
