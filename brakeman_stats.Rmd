@@ -15,13 +15,20 @@ library(purrr)
 library(lubridate)
 
 options(stringsAsFactors = FALSE)
-
 ```
 
-```{r load-repo}
+```{r cloning, include=FALSE}
+# Note: the first time you run this .Rmd file RStudio will clone
+# the 'brakeman' project into a local directory. It may appear that RStudio
+# hangs for a bit since there's no output. To see the output change include=FALSE to
+# include=TRUE above.
 if (!file.exists('brakeman-from-github')) {
   clone('https://github.com/presidentbeef/brakeman.git', 'brakeman-from-github')
 }
+```
+
+```{r load-repo}
+
 repo <- repository('brakeman-from-github')
 # 285 is about 10% of the commits, as I write.
 # I believe we get the commits from newest to oldest from git2r.
@@ -33,6 +40,8 @@ Make a dataframe from our ten percent of the commits...
 
 ```{r get-10pct-commits}
 # Get relevant bits out of the list
+# Thank you Nay San!
+# https://stackoverflow.com/questions/44474707/how-to-create-new-list-of-an-object-attribute-from-a-list-of-those-objects
 brakeman_ten_pct_df <-
   commits_10pct %>%
   map_df(
@@ -43,13 +52,18 @@ brakeman_ten_pct_df <-
     )
   )
 
+brakeman_ten_pct_df <- mutate(brakeman_ten_pct_df, weekday = weekdays(date))
+brakeman_ten_pct_df$weekday <- factor(brakeman_ten_pct_df$weekday, levels= c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
 ```
 
+
+```{r order-by-weekday, include=FALSE}
+brakeman_ten_pct_df <- brakeman_ten_pct_df[order(brakeman_ten_pct_df$weekday),]
+```
 Now create a histogram of commits by day of the week.
 
 ```{r dow-10pct-histogram}
 brakeman_ten_pct_df %>%
-  mutate(weekday = weekdays(date)) %>%
   group_by(weekday) %>%
   tally() %>%
   ggplot(aes(x = weekday, y = n)) +
@@ -69,16 +83,18 @@ commits_all_df <-
     )
   )
 
+commits_all_df <- mutate(commits_all_df, weekday = weekdays(date))
+commits_all_df$weekday <- factor(commits_all_df$weekday, levels= c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
 ```
 
-Now the same histogram:
+Now the same bar chart of commits by weekday:
 
 ```{r dow-histogram-all}
 commits_all_df %>%
-  mutate(weekday = weekdays(date)) %>%
   group_by(weekday) %>%
   tally() %>%
   ggplot(aes(x = weekday, y = n)) +
   geom_bar(stat = "identity")
 ```
 
+The first puzzle is why these bar charts look so different? Could it be the most recent 10% of commits have a different weekday distribution because the committers (project contributors) have changed over time?
