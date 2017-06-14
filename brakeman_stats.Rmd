@@ -19,6 +19,9 @@ options(stringsAsFactors = FALSE)
 ```
 
 ```{r load-repo}
+if (!file.exists('brakeman-from-github')) {
+  clone('https://github.com/presidentbeef/brakeman.git', 'brakeman-from-github')
+}
 repo <- repository('brakeman-from-github')
 # 285 is about 10% of the commits, as I write.
 # I believe we get the commits from newest to oldest from git2r.
