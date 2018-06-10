@@ -1,8 +1,10 @@
 ---
 title: "Statistics for the Brakeman git repository"
 author: "Steve Wainstead"
-date: "June 12, 2017"
-output: html_document
+date: "June 10, 2018"
+output:
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -18,22 +20,25 @@ options(stringsAsFactors = FALSE)
 ```
 
 ```{r cloning, include=FALSE}
+# Set the repo name
+repo_on_filesystem = 'brakeman-from-github'
 # Note: the first time you run this .Rmd file RStudio will clone
 # the 'brakeman' project into a local directory. It may appear that RStudio
 # hangs for a bit since there's no output. To see the output change include=FALSE to
 # include=TRUE above.
-if (!file.exists('brakeman-from-github')) {
-  clone('https://github.com/presidentbeef/brakeman.git', 'brakeman-from-github')
+if (!file.exists(repo_on_filesystem)) {
+  clone('https://github.com/presidentbeef/brakeman.git', repo_on_filesystem)
 }
 ```
 
 ```{r load-repo}
 
-repo <- repository('brakeman-from-github')
-# 285 is about 10% of the commits, as I write.
+repo <- repository(repo_on_filesystem)
 # I believe we get the commits from newest to oldest from git2r.
-commits_10pct = repo %>% commits(n = 285)
 commits_all = repo %>% commits()
+tenpct = round(length(commits_all) * 0.1)
+commits_10pct = repo %>% commits(n = tenpct)
+
 ```
 
 Make a dataframe from our ten percent of the commits...
@@ -98,3 +103,5 @@ commits_all_df %>%
 ```
 
 The first puzzle is why these bar charts look so different? Could it be the most recent 10% of commits have a different weekday distribution because the committers (project contributors) have changed over time?
+
+Next I'd like to see a graph of the number of commits by year.
